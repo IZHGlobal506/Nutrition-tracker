@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #eee;
+        }
+        button {
+            padding: 8px 12px;
+            margin-top: 10px;
+            cursor: pointer;
+            border: none;
+            background: #4CAF50;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #chartContainer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Nutrition Tracker</h1>
+<p style="text-align:center;">Log your meals, track calories & macros — data is saved in your browser.</p>
+
+<table id="foodTable">
+    <thead>
+        <tr>
+            <th>Food</th>
+            <th>Calories</th>
+            <th>Protein (g)</th>
+            <th>Carbs (g)</th>
+            <th>Fat (g)</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<button onclick="addFood()">Add Food Item</button>
+<button onclick="clearAll()">Clear All</button>
+
+<div id="chartContainer">
+    <canvas id="macroChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let foodData = JSON.parse(localStorage.getItem('foodData')) || [];
+
+function renderTable() {
+    const tableBody = document.querySelector('#foodTable tbody');
+    tableBody.innerHTML = '';
+    foodData.forEach((item, index) => {
+        const row = `<tr>
+            <td>${item.name}</td>
+            <td>${item.calories}</td>
+            <td>${item.protein}</td>
+            <td>${item.carbs}</td>
+            <td>${item.fat}</td>
+            <td><button onclick="removeFood(${index})">Delete</button></td>
+        </tr>`;
+        tableBody.innerHTML += row;
+    });
+    updateChart();
+    localStorage.setItem('foodData', JSON.stringify(foodData));
+}
+
+function addFood() {
+    const name = prompt("Food name:");
+    const calories = parseFloat(prompt("Calories:")) || 0;
+    const protein = parseFloat(prompt("Protein (g):")) || 0;
+    const carbs = parseFloat(prompt("Carbs (g):")) || 0;
+    const fat = parseFloat(prompt("Fat (g):")) || 0;
+
+    if (name) {
+        foodData.push({ name, calories, protein, carbs, fat });
+        renderTable();
+    }
+}
+
+function removeFood(index) {
+    foodData.splice(index, 1);
+    renderTable();
+}
+
+function clearAll() {
+    if (confirm("Clear all data?")) {
+        foodData = [];
+        renderTable();
+    }
+}
+
+let chart;
+function updateChart() {
+    const totalProtein = foodData.reduce((sum, item) => sum + item.protein, 0);
+    const totalCarbs = foodData.reduce((sum, item) => sum + item.carbs, 0);
+    const totalFat = foodData.reduce((sum, item) => sum + item.fat, 0);
+
+    const ctx = document.getElementById('macroChart').getContext('2d');
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Protein', 'Carbs', 'Fat'],
+            datasets: [{
+                data: [totalProtein, totalCarbs, totalFat],
+                backgroundColor: ['#4CAF50', '#2196F3', '#FF9800']
+            }]
+        }
+    });
+}
+
+renderTable();
+</script>
+
+</body>
+</html>
